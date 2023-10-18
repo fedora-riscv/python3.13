@@ -2,10 +2,10 @@
 # Top-level metadata
 # ==================
 
-%global pybasever 3.12
+%global pybasever 3.13
 
 # pybasever without the dot:
-%global pyshortver 312
+%global pyshortver 313
 
 Name: python%{pybasever}
 Summary: Version %{pybasever} of the Python interpreter
@@ -14,10 +14,10 @@ URL: https://www.python.org/
 #  WARNING  When rebasing to a new Python version,
 #           remember to update the python3-docs package as well
 %global general_version %{pybasever}.0
-#global prerel ...
+%global prerel a1
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 2%{?dist}
+Release: 1%{?dist}
 License: Python-2.0.1
 
 
@@ -58,7 +58,7 @@ License: Python-2.0.1
 #   IMPORTANT: When bootstrapping, it's very likely python-pip-wheel is
 #   not available. Turn off the rpmwheels bcond until
 #   python-pip is built with a wheel to get around the issue.
-%bcond_with bootstrap
+%bcond_without bootstrap
 
 # Whether to use RPM build wheels from the python-{pip,setuptools,wheel}-wheel packages
 # Uses upstream bundled prebuilt wheels otherwise
@@ -259,8 +259,6 @@ BuildRequires: libappstream-glib
 BuildRequires: libb2-devel
 %endif
 BuildRequires: libffi-devel
-BuildRequires: libnsl2-devel
-BuildRequires: libtirpc-devel
 BuildRequires: libGL-devel
 BuildRequires: libuuid-devel
 BuildRequires: libX11-devel
@@ -278,7 +276,6 @@ BuildRequires: gdb
 
 BuildRequires: tar
 BuildRequires: tcl-devel
-BuildRequires: tix-devel
 BuildRequires: tk-devel
 BuildRequires: tzdata
 
@@ -320,7 +317,7 @@ BuildRequires: python3-rpm-generators
 
 Source0: %{url}ftp/python/%{general_version}/Python-%{upstream_version}.tar.xz
 Source1: %{url}ftp/python/%{general_version}/Python-%{upstream_version}.tar.xz.asc
-# The release manager for Python 3.12 is Thomas Wouters
+# The release manager for Python 3.13 is Thomas Wouters
 Source2: https://github.com/Yhg1s.gpg
 
 # A simple script to check timestamps of bytecode files
@@ -336,7 +333,7 @@ Source11: idle3.appdata.xml
 
 # (Patches taken from github.com/fedora-python/cpython)
 
-# 00251 # cae5a6abc5df08239c85b83e4e250b6f2702e4f5
+# 00251 # 758eb29fbfe9253ab343e8a09a480a6b64e57df8
 # Change user install location
 #
 # Set values of base and platbase in sysconfig from /usr
@@ -353,7 +350,7 @@ Source11: idle3.appdata.xml
 # pypa/distutils integration: https://github.com/pypa/distutils/pull/70
 Patch251: 00251-change-user-install-location.patch
 
-# 00371 # d917a50238c94c652bc30ae9061d65f60cc8accd
+# 00371 # 16d2d6be400cb52c0f50fa27c0e08ae63d1d3add
 # Revert "bpo-1596321: Fix threading._shutdown() for the main thread (GH-28549) (GH-28589)"
 #
 # This reverts commit 38c67738c64304928c68d5c2bd78bbb01d979b94. It
@@ -548,12 +545,6 @@ Supplements: tox
 
 %if %{without bootstrap}
 Requires: (python3-rpm-generators if rpm-build)
-%endif
-
-Provides: %{pkgname}-2to3 = %{version}-%{release}
-
-%if %{with main_python}
-Provides: 2to3 = %{version}-%{release}
 %endif
 
 Conflicts: %{pkgname} < %{version}-%{release}
@@ -974,7 +965,7 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/idle3.appdata.
 # See https://bugzilla.redhat.com/show_bug.cgi?id=201434
 # and https://bugzilla.redhat.com/show_bug.cgi?id=653058
 sed -i -e "s/'pyconfig.h'/'%{_pyconfig_h}'/" \
-  %{buildroot}%{pylibdir}/sysconfig.py
+  %{buildroot}%{pylibdir}/sysconfig/*.py
 
 # Install i18n tools to bindir
 # They are also in python2, so we version them
@@ -1033,7 +1024,7 @@ PYTHONPATH="%{_rpmconfigdir}/redhat" \
 LD_LIBRARY_PATH="%{buildroot}%{dynload_dir}/:%{buildroot}%{_libdir}" \
 %{buildroot}%{_bindir}/python%{pybasever} -s -B -m compileall \
 -f %{_smp_mflags} -o 0 -o 1 -o 2 -s %{buildroot} -p / %{buildroot} --hardlink-dupes --invalidation-mode=timestamp \
--x 'bad_coding|badsyntax|site-packages|test/test_lib2to3/data'
+-x 'bad_coding|badsyntax|site-packages'
 
 # Turn this BRP off, it is done by compileall2 --hardlink-dupes above
 %global __brp_python_hardlink %{nil}
@@ -1061,7 +1052,6 @@ rm %{buildroot}%{_bindir}/pygettext3.py
 rm %{buildroot}%{_bindir}/msgfmt3.py
 rm %{buildroot}%{_bindir}/idle3
 rm %{buildroot}%{_bindir}/python3-*
-rm %{buildroot}%{_bindir}/2to3
 rm %{buildroot}%{_libdir}/libpython3.so
 rm %{buildroot}%{_mandir}/man1/python3.1
 rm %{buildroot}%{_libdir}/pkgconfig/python3.pc
@@ -1151,7 +1141,9 @@ CheckPython() {
   # test_check_probes is failing since it was introduced in 3.12.0rc1,
   # the test is skipped until it is fixed in upstream.
   # see: https://github.com/python/cpython/issues/104280#issuecomment-1669249980
-
+  # test.regrtest fails if SOURCE_DATE_EPOCH is set
+  # https://github.com/python/cpython/issues/110932
+  unset SOURCE_DATE_EPOCH
   LD_LIBRARY_PATH=$ConfDir $ConfDir/python -m test.regrtest \
     -wW --slowest %{_smp_mflags} --timeout=2700 \
     -i test_freeze_simple_script \
@@ -1204,8 +1196,6 @@ CheckPython optimized
 
 %license %{pylibdir}/LICENSE.txt
 
-%{pylibdir}/lib2to3
-
 %dir %{pylibdir}/unittest/
 %dir %{pylibdir}/unittest/__pycache__/
 %{pylibdir}/unittest/*.py
@@ -1247,6 +1237,11 @@ CheckPython optimized
 %{pylibdir}/concurrent/futures/*.py
 %{pylibdir}/concurrent/futures/__pycache__/*%{bytecode_suffixes}
 
+%dir %{pylibdir}/sysconfig/
+%dir %{pylibdir}/sysconfig/__pycache__/
+%{pylibdir}/sysconfig/*.py
+%{pylibdir}/sysconfig/__pycache__/*%{bytecode_suffixes}
+
 %{pylibdir}/pydoc_data
 
 %{dynload_dir}/_blake2.%{SOABI_optimized}.so
@@ -1265,7 +1260,6 @@ CheckPython optimized
 %{dynload_dir}/_codecs_kr.%{SOABI_optimized}.so
 %{dynload_dir}/_codecs_tw.%{SOABI_optimized}.so
 %{dynload_dir}/_contextvars.%{SOABI_optimized}.so
-%{dynload_dir}/_crypt.%{SOABI_optimized}.so
 %{dynload_dir}/_csv.%{SOABI_optimized}.so
 %{dynload_dir}/_ctypes.%{SOABI_optimized}.so
 %{dynload_dir}/_curses.%{SOABI_optimized}.so
@@ -1294,7 +1288,6 @@ CheckPython optimized
 %{dynload_dir}/_statistics.%{SOABI_optimized}.so
 %{dynload_dir}/_struct.%{SOABI_optimized}.so
 %{dynload_dir}/array.%{SOABI_optimized}.so
-%{dynload_dir}/audioop.%{SOABI_optimized}.so
 %{dynload_dir}/binascii.%{SOABI_optimized}.so
 %{dynload_dir}/cmath.%{SOABI_optimized}.so
 %{dynload_dir}/_datetime.%{SOABI_optimized}.so
@@ -1302,14 +1295,11 @@ CheckPython optimized
 %{dynload_dir}/grp.%{SOABI_optimized}.so
 %{dynload_dir}/math.%{SOABI_optimized}.so
 %{dynload_dir}/mmap.%{SOABI_optimized}.so
-%{dynload_dir}/nis.%{SOABI_optimized}.so
-%{dynload_dir}/ossaudiodev.%{SOABI_optimized}.so
 %{dynload_dir}/_posixshmem.%{SOABI_optimized}.so
 %{dynload_dir}/pyexpat.%{SOABI_optimized}.so
 %{dynload_dir}/readline.%{SOABI_optimized}.so
 %{dynload_dir}/resource.%{SOABI_optimized}.so
 %{dynload_dir}/select.%{SOABI_optimized}.so
-%{dynload_dir}/spwd.%{SOABI_optimized}.so
 %{dynload_dir}/syslog.%{SOABI_optimized}.so
 %{dynload_dir}/termios.%{SOABI_optimized}.so
 %{dynload_dir}/unicodedata.%{SOABI_optimized}.so
@@ -1425,7 +1415,7 @@ CheckPython optimized
 %endif
 
 # "Makefile" and the config-32/64.h file are needed by
-# sysconfig.py:get_config_vars(), so we include them in the core
+# sysconfig.get_config_vars(), so we include them in the core
 # package, along with their parent directories (bug 531901):
 %dir %{pylibdir}/config-%{LDVERSION_optimized}-%{platform_triplet}/
 %{pylibdir}/config-%{LDVERSION_optimized}-%{platform_triplet}/Makefile
@@ -1448,7 +1438,6 @@ CheckPython optimized
 %doc Misc/README.valgrind Misc/valgrind-python.supp
 
 %if %{with main_python}
-%{_bindir}/2to3
 %{_bindir}/python3-config
 %{_bindir}/python-config
 %{_libdir}/pkgconfig/python3.pc
@@ -1460,7 +1449,6 @@ CheckPython optimized
 %{_bindir}/msgfmt.py
 %endif
 
-%{_bindir}/2to3-%{pybasever}
 %{_bindir}/pygettext%{pybasever}.py
 %{_bindir}/msgfmt%{pybasever}.py
 
@@ -1507,6 +1495,7 @@ CheckPython optimized
 %{dynload_dir}/_testbuffer.%{SOABI_optimized}.so
 %{dynload_dir}/_testcapi.%{SOABI_optimized}.so
 %{dynload_dir}/_testclinic.%{SOABI_optimized}.so
+%{dynload_dir}/_testclinic_limited.%{SOABI_optimized}.so
 %{dynload_dir}/_testimportmultiple.%{SOABI_optimized}.so
 %{dynload_dir}/_testinternalcapi.%{SOABI_optimized}.so
 %{dynload_dir}/_testmultiphase.%{SOABI_optimized}.so
@@ -1549,7 +1538,6 @@ CheckPython optimized
 %{dynload_dir}/_codecs_kr.%{SOABI_debug}.so
 %{dynload_dir}/_codecs_tw.%{SOABI_debug}.so
 %{dynload_dir}/_contextvars.%{SOABI_debug}.so
-%{dynload_dir}/_crypt.%{SOABI_debug}.so
 %{dynload_dir}/_csv.%{SOABI_debug}.so
 %{dynload_dir}/_ctypes.%{SOABI_debug}.so
 %{dynload_dir}/_curses.%{SOABI_debug}.so
@@ -1578,7 +1566,6 @@ CheckPython optimized
 %{dynload_dir}/_statistics.%{SOABI_debug}.so
 %{dynload_dir}/_struct.%{SOABI_debug}.so
 %{dynload_dir}/array.%{SOABI_debug}.so
-%{dynload_dir}/audioop.%{SOABI_debug}.so
 %{dynload_dir}/binascii.%{SOABI_debug}.so
 %{dynload_dir}/cmath.%{SOABI_debug}.so
 %{dynload_dir}/_datetime.%{SOABI_debug}.so
@@ -1586,14 +1573,11 @@ CheckPython optimized
 %{dynload_dir}/grp.%{SOABI_debug}.so
 %{dynload_dir}/math.%{SOABI_debug}.so
 %{dynload_dir}/mmap.%{SOABI_debug}.so
-%{dynload_dir}/nis.%{SOABI_debug}.so
-%{dynload_dir}/ossaudiodev.%{SOABI_debug}.so
 %{dynload_dir}/_posixshmem.%{SOABI_debug}.so
 %{dynload_dir}/pyexpat.%{SOABI_debug}.so
 %{dynload_dir}/readline.%{SOABI_debug}.so
 %{dynload_dir}/resource.%{SOABI_debug}.so
 %{dynload_dir}/select.%{SOABI_debug}.so
-%{dynload_dir}/spwd.%{SOABI_debug}.so
 %{dynload_dir}/syslog.%{SOABI_debug}.so
 %{dynload_dir}/termios.%{SOABI_debug}.so
 %{dynload_dir}/unicodedata.%{SOABI_debug}.so
@@ -1633,6 +1617,7 @@ CheckPython optimized
 %{dynload_dir}/_testbuffer.%{SOABI_debug}.so
 %{dynload_dir}/_testcapi.%{SOABI_debug}.so
 %{dynload_dir}/_testclinic.%{SOABI_debug}.so
+%{dynload_dir}/_testclinic_limited.%{SOABI_debug}.so
 %{dynload_dir}/_testimportmultiple.%{SOABI_debug}.so
 %{dynload_dir}/_testinternalcapi.%{SOABI_debug}.so
 %{dynload_dir}/_testmultiphase.%{SOABI_debug}.so
@@ -1666,83 +1651,6 @@ CheckPython optimized
 # ======================================================
 
 %changelog
-* Thu Oct 05 2023 Yaakov Selkowitz <yselkowi@redhat.com> - 3.12.0-2
-- Use bundled libb2 in RHEL builds
+* Mon Oct 16 2023 Karolina Surma <ksurma@redhat.com> - 3.13.0~a1-1
+- Initial Python 3.13 package forked from Python 3.12
 
-* Mon Oct 02 2023 Miro Hrončok <mhroncok@redhat.com> - 3.12.0-1
-- Update to 3.12.0 final
-
-* Tue Sep 19 2023 Miro Hrončok <mhroncok@redhat.com> - 3.12.0~rc3-1
-- Update to 3.12.0rc3
-
-* Wed Sep 06 2023 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.0~rc2-1
-- Update to 3.12.0rc2
-
-* Mon Aug 07 2023 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.0~rc1-1
-- Update to 3.12.0rc1
-
-* Wed Aug 02 2023 Charalampos Stratakis <cstratak@redhat.com> - 3.12.0~b4-3
-- Remove extra distro-applied CFLAGS passed to user built C extensions
-- https://fedoraproject.org/wiki/Changes/Python_Extension_Flags_Reduction
-
-* Fri Jul 21 2023 Fedora Release Engineering <releng@fedoraproject.org> - 3.12.0~b4-2
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
-
-* Wed Jul 12 2023 Miro Hrončok <mhroncok@redhat.com> - 3.12.0~b4-1
-- Update to 3.12.0b4
-
-* Wed Jun 21 2023 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.0~b3-2
-- Backport upstream patch to add PyType_GetDict() function
-
-* Tue Jun 20 2023 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.0~b3-1
-- Update to 3.12.0b3
-
-* Tue Jun 13 2023 Python Maint <python-maint@redhat.com> - 3.12.0~b2-3
-- Rebuilt for Python 3.12
-
-* Tue Jun 13 2023 Python Maint <python-maint@redhat.com> - 3.12.0~b2-2
-- Bootstrap for Python 3.12
-
-* Wed Jun 07 2023 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.0~b2-1
-- Update to 3.12.0b2
-
-* Mon May 29 2023 Miro Hrončok <mhroncok@redhat.com> - 3.12.0~b1-2
-- Use wheels from RPMs, at least on Fedora 39+
-- On older Fedora releases, declare bundled() provides and a complex License tag
-
-* Tue May 23 2023 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.0~b1-1
-- Update to 3.12.0b1
-
-* Wed Apr 05 2023 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.0~a7-1
-- Update to 3.12.0a7
-
-* Thu Mar 23 2023 Miro Hrončok <mhroncok@redhat.com> - 3.12.0~a6-2
-- Increase the test timeout during package build
-
-* Wed Mar 08 2023 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.0~a6-1
-- Update to 3.12.0a6
-
-* Wed Feb 08 2023 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.0~a5-1
-- Update to 3.12.0a5
-
-* Fri Jan 20 2023 Fedora Release Engineering <releng@fedoraproject.org> - 3.12.0~a4-2
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
-
-* Wed Jan 11 2023 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.0~a4-1
-- Update to 3.12.0a4
-
-* Mon Dec 19 2022 Miro Hrončok <mhroncok@redhat.com> - 3.12.0~a3-2
-- No longer patch the default bytecode cache invalidation policy
-
-* Wed Dec 07 2022 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.0~a3-1
-- Update to 3.12.0a3
-
-* Tue Nov 15 2022 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.0~a2-1
-- Update to 3.12.0a2
-- Fixes: rhbz#2133847
-
-* Thu Oct 27 2022 Miro Hrončok <mhroncok@redhat.com> - 3.12.0~a1-2
-- Finish initial bootstrap of Python 3.12.0a1
-
-* Wed Oct 26 2022 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.0~a1-1
-- Initial Python 3.12 package forked from Python 3.11

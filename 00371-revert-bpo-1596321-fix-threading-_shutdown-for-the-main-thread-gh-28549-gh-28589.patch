@@ -12,14 +12,14 @@ https://bodhi.fedoraproject.org/updates/FEDORA-2021-e152ce5f31
 https://github.com/GrahamDumpleton/mod_wsgi/issues/730
 ---
  Lib/test/test_threading.py | 33 ---------------------------------
- Lib/threading.py           | 25 ++++++++-----------------
- 2 files changed, 8 insertions(+), 50 deletions(-)
+ Lib/threading.py           | 31 +++++++++++--------------------
+ 2 files changed, 11 insertions(+), 53 deletions(-)
 
 diff --git a/Lib/test/test_threading.py b/Lib/test/test_threading.py
-index 9e4972ecb6..6f081d8f38 100644
+index 00a64372b3..b5f30948e6 100644
 --- a/Lib/test/test_threading.py
 +++ b/Lib/test/test_threading.py
-@@ -987,39 +987,6 @@ def noop(): pass
+@@ -1015,39 +1015,6 @@ def noop(): pass
              threading.Thread(target=noop).start()
              # Thread.join() is not called
  
@@ -60,10 +60,10 @@ index 9e4972ecb6..6f081d8f38 100644
          code = """if 1:
              import atexit
 diff --git a/Lib/threading.py b/Lib/threading.py
-index df273870fa..eba297776d 100644
+index 41c3a9ff93..4e973979a0 100644
 --- a/Lib/threading.py
 +++ b/Lib/threading.py
-@@ -1565,29 +1565,20 @@ def _shutdown():
+@@ -1581,32 +1581,23 @@ def _shutdown():
  
      global _SHUTTING_DOWN
      _SHUTTING_DOWN = True
@@ -72,8 +72,11 @@ index df273870fa..eba297776d 100644
 +    # The main thread isn't finished yet, so its thread state lock can't have
 +    # been released.
 +    assert tlock is not None
-+    assert tlock.locked()
-+    tlock.release()
++    if tlock.locked():
++        # It should have been released already by
++        # _PyInterpreterState_SetNotRunningMain(), but there may be
++        # embedders that aren't calling that yet.
++        tlock.release()
 +    _main_thread._stop()
  
      # Call registered threading atexit functions before threads are joined.
@@ -87,8 +90,11 @@ index df273870fa..eba297776d 100644
 -        # The main thread isn't finished yet, so its thread state lock can't
 -        # have been released.
 -        assert tlock is not None
--        assert tlock.locked()
--        tlock.release()
+-        if tlock.locked():
+-            # It should have been released already by
+-            # _PyInterpreterState_SetNotRunningMain(), but there may be
+-            # embedders that aren't calling that yet.
+-            tlock.release()
 -        _main_thread._stop()
 -    else:
 -        # bpo-1596321: _shutdown() must be called in the main thread.

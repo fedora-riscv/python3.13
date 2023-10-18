@@ -15,7 +15,7 @@
     repositories:
     - repo: "https://src.fedoraproject.org/tests/python.git"
       dest: "python"
-    pybasever: "3.12"
+    pybasever: "3.13"
     tests:
     - rpm_qa:
         run: rpm -qa
