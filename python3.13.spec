@@ -554,9 +554,6 @@ This package contains the header files and configuration needed to compile
 Python extension modules (typically written in C or C++), to embed Python
 into other programs, and to make binary distributions for Python libraries.
 
-It also contains the necessary macros to build RPM packages with Python modules
-and 2to3 tool, an automatic source converter from Python 2.X.
-
 
 %package -n %{pkgname}-idle
 Summary: A basic graphical development environment for Python
