@@ -14,10 +14,10 @@ URL: https://www.python.org/
 #  WARNING  When rebasing to a new Python version,
 #           remember to update the python3-docs package as well
 %global general_version %{pybasever}.0
-%global prerel a1
+%global prerel a2
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 2%{?dist}
+Release: 1%{?dist}
 License: Python-2.0.1
 
 
@@ -1651,6 +1651,9 @@ CheckPython optimized
 # ======================================================
 
 %changelog
+* Fri Nov 24 2023 Karolina Surma <ksurma@redhat.com> - 3.13.0~a2-1
+- Update to Python 3.13.0a2
+
 * Wed Nov 15 2023 Miro Hrončok <mhroncok@redhat.com> - 3.13.0~a1-2
 - Build Python 3.13 using Python 3.13
 
