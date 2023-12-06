@@ -52,10 +52,10 @@ Filters = [
     # manual pages
     'no-manual-page-for-binary (idle|pydoc|pyvenv|2to3|python3?-debug|pathfix|msgfmt|pygettext)',
     'no-manual-page-for-binary python3?.*-config$',
-    'no-manual-page-for-binary python3\.\d+dm?$',
+    'no-manual-page-for-binary python3\.\d+t?dm?$',
 
     # missing documentation from subpackages
-    '^python3(\.\d+)?-(debug|tkinter|test|idle)\.[^:]+: (E|W): no-documentation',
+    '^python3(\.\d+)?-(freethreading(-debug)?|debug|tkinter|test|idle)\.[^:]+: (E|W): no-documentation',
 
     # platform python is obsoleted, but not provided
     'obsolete-not-provided platform-python',
@@ -77,13 +77,13 @@ Filters = [
     # this is OK for F28+
     'library-without-ldconfig-post',
 
-    # debug package contains devel and non-devel files
-    'python3(\.\d+)?-debug\.[^:]+: (E|W): (non-)?devel-file-in-(non-)?devel-package',
+    # freethreading/debug package contains devel and non-devel files
+    'python3(\.\d+)?-(freethreading(-debug)?|debug)\.[^:]+: (E|W): (non-)?devel-file-in-(non-)?devel-package',
 
     # this goes to other subpackage, hence not actually dangling
     'dangling-relative-symlink /usr/bin/python python3',
     'dangling-relative-symlink /usr/share/man/man1/python\.1\.gz python3\.1\.gz',
-    'dangling-relative-symlink /usr/lib(64)?/pkgconfig/python-3\.\d+dm?(-embed)?\.pc python-3\.\d+(-embed)?\.pc',
+    'dangling-relative-symlink /usr/lib(64)?/pkgconfig/python-3\.\d+t?d?m?(-embed)?\.pc python-3\.\d+t?(-embed)?\.pc',
 
     # the python-unversioned-command package contains dangling symlinks by design
     '^python-unversioned-command\.[^:]+: (E|W): dangling-relative-symlink (/usr/bin/python \./python3|/usr/share/man/man1/python\.1\S* ./python3\.1\S*)$',
