@@ -138,7 +138,13 @@ Provides: bundled(python3dist(packaging)) = 23
 
 # Extra build without GIL, the freethreading PEP 703 provisional way
 # (the -freethreading subpackage)
+# support for the excluded arches is being added upstream and is expected to land in 3.13.0a3
+# https://github.com/python/cpython/issues/112535
+%ifnarch ppc64le s390x
 %bcond_without freethreading_build
+%else
+%bcond_with freethreading_build
+%endif
 
 # Support for the GDB debugger
 %bcond_without gdb_hooks
@@ -1656,6 +1662,7 @@ CheckPython freethreading
 * Tue Dec 05 2023 Miro Hrončok <mhroncok@redhat.com> - 3.13.0~a2-2
 - Add the python3.13-freethreading and python3.13-freethreading-debug packages
 - See https://peps.python.org/pep-0703/
+- ppc64le and s390x are excluded for now, support is expected in 3.13.0a3
 
 * Fri Nov 24 2023 Karolina Surma <ksurma@redhat.com> - 3.13.0~a2-1
 - Update to Python 3.13.0a2
