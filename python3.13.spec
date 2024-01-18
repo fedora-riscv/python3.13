@@ -71,6 +71,8 @@ License: Python-2.0.1
 # If the rpmwheels condition is disabled, we use the bundled wheel packages
 # from Python with the versions below.
 # This needs to be manually updated when we update Python.
+# Explore the sources tarball (you need the version before %%prep is executed):
+#  $ tar -tf Python-%%{upstream_version}.tar.xz | grep whl
 %global pip_version 23.3.2
 %global setuptools_version 67.6.1
 %global wheel_version 0.40.0
