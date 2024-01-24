@@ -17,7 +17,7 @@ URL: https://www.python.org/
 %global prerel a3
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: Python-2.0.1
 
 
@@ -373,17 +373,6 @@ Source11: idle3.appdata.xml
 #
 # pypa/distutils integration: https://github.com/pypa/distutils/pull/70
 Patch251: 00251-change-user-install-location.patch
-
-# 00371 # 16d2d6be400cb52c0f50fa27c0e08ae63d1d3add
-# Revert "bpo-1596321: Fix threading._shutdown() for the main thread (GH-28549) (GH-28589)"
-#
-# This reverts commit 38c67738c64304928c68d5c2bd78bbb01d979b94. It
-# introduced regression causing FreeIPA's tests to fail.
-#
-# For more info see:
-# https://bodhi.fedoraproject.org/updates/FEDORA-2021-e152ce5f31
-# https://github.com/GrahamDumpleton/mod_wsgi/issues/730
-Patch371: 00371-revert-bpo-1596321-fix-threading-_shutdown-for-the-main-thread-gh-28549-gh-28589.patch
 
 # 00418 # 7044fbb05d0825f5fd9733a6491bb5bea904fab1
 # Don't generate sbom in make regen-all
@@ -1678,6 +1667,10 @@ CheckPython freethreading
 # ======================================================
 
 %changelog
+* Wed Jan 24 2024 Victor Stinner <vstinner@python.org> - 3.13.0~a3-3
+- No longer revert threading._shutdown() change which caused FreeIPA to hang
+  at exit.
+
 * Fri Jan 19 2024 Miro Hrončok <mhroncok@redhat.com> - 3.13.0~a3-2
 - Enable python3.13-freethreading and python3.13-freethreading-debug on ppc64le
 
