@@ -1,0 +1,22 @@
+* Fri Jan 26 2024 Fedora Release Engineering <releng@fedoraproject.org> - 3.13.0~a3-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Fri Jan 19 2024 Miro Hrončok <mhroncok@redhat.com> - 3.13.0~a3-2
+- Enable python3.13-freethreading and python3.13-freethreading-debug on ppc64le
+
+* Thu Jan 18 2024 Karolina Surma <ksurma@redhat.com> - 3.13.0~a3-1
+- Update to Python 3.13.0a3
+
+* Tue Dec 05 2023 Miro Hrončok <mhroncok@redhat.com> - 3.13.0~a2-2
+- Add the python3.13-freethreading and python3.13-freethreading-debug packages
+- See https://peps.python.org/pep-0703/
+- ppc64le and s390x are excluded for now, support is expected in 3.13.0a3
+
+* Fri Nov 24 2023 Karolina Surma <ksurma@redhat.com> - 3.13.0~a2-1
+- Update to Python 3.13.0a2
+
+* Wed Nov 15 2023 Miro Hrončok <mhroncok@redhat.com> - 3.13.0~a1-2
+- Build Python 3.13 using Python 3.13
+
+* Mon Oct 16 2023 Karolina Surma <ksurma@redhat.com> - 3.13.0~a1-1
+- Initial Python 3.13 package forked from Python 3.12
