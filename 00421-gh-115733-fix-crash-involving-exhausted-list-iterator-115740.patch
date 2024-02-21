@@ -1,0 +1,105 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sam Gross <colesbury@gmail.com>
+Date: Tue, 20 Feb 2024 15:18:44 -0500
+Subject: [PATCH] 00421: gh-115733: Fix crash involving exhausted list iterator
+ (#115740)
+
+---
+ Lib/test/list_tests.py                                 |  5 +++++
+ .../2024-02-20-18-49-02.gh-issue-115733.51Zb85.rst     |  1 +
+ Objects/listobject.c                                   | 10 +++++-----
+ Python/bytecodes.c                                     |  3 ++-
+ Python/executor_cases.c.h                              |  1 +
+ Python/generated_cases.c.h                             |  2 +-
+ 6 files changed, 15 insertions(+), 7 deletions(-)
+ create mode 100644 Misc/NEWS.d/next/Core and Builtins/2024-02-20-18-49-02.gh-issue-115733.51Zb85.rst
+
+diff --git a/Lib/test/list_tests.py b/Lib/test/list_tests.py
+index d9ab21d494..26118e14bb 100644
+--- a/Lib/test/list_tests.py
++++ b/Lib/test/list_tests.py
+@@ -562,3 +562,8 @@ def test_exhausted_iterator(self):
+         self.assertEqual(list(exhit), [])
+         self.assertEqual(list(empit), [9])
+         self.assertEqual(a, self.type2test([1, 2, 3, 9]))
++
++        # gh-115733: Crash when iterating over exhausted iterator
++        exhit = iter(self.type2test([1, 2, 3]))
++        for _ in exhit:
++            next(exhit, 1)
+diff --git a/Misc/NEWS.d/next/Core and Builtins/2024-02-20-18-49-02.gh-issue-115733.51Zb85.rst b/Misc/NEWS.d/next/Core and Builtins/2024-02-20-18-49-02.gh-issue-115733.51Zb85.rst
+new file mode 100644
+index 0000000000..5cbb292065
+--- /dev/null
++++ b/Misc/NEWS.d/next/Core and Builtins/2024-02-20-18-49-02.gh-issue-115733.51Zb85.rst	
+@@ -0,0 +1 @@
++Fix crash when calling ``next()`` on exhausted list iterators.
+diff --git a/Objects/listobject.c b/Objects/listobject.c
+index 96182a4230..7917b80824 100644
+--- a/Objects/listobject.c
++++ b/Objects/listobject.c
+@@ -3537,13 +3537,13 @@ listreviter_next(PyObject *self)
+ {
+     listreviterobject *it = (listreviterobject *)self;
+     assert(it != NULL);
++    Py_ssize_t index = LOAD_SSIZE(it->it_index);
++    if (index < 0) {
++        return NULL;
++    }
++
+     PyListObject *seq = it->it_seq;
+     assert(PyList_Check(seq));
+-
+-    Py_ssize_t index = LOAD_SSIZE(it->it_index);
+-    if (index < 0) {
+-        return NULL;
+-    }
+     PyObject *item = list_get_item_ref(seq, index);
+     if (item != NULL) {
+         STORE_SSIZE(it->it_index, index - 1);
+diff --git a/Python/bytecodes.c b/Python/bytecodes.c
+index 6822e772e9..228d4c2f7a 100644
+--- a/Python/bytecodes.c
++++ b/Python/bytecodes.c
+@@ -2606,7 +2606,7 @@ dummy_func(
+             assert(Py_TYPE(iter) == &PyListIter_Type);
+             STAT_INC(FOR_ITER, hit);
+             PyListObject *seq = it->it_seq;
+-            if ((size_t)it->it_index >= (size_t)PyList_GET_SIZE(seq)) {
++            if (seq == NULL || (size_t)it->it_index >= (size_t)PyList_GET_SIZE(seq)) {
+                 it->it_index = -1;
+                 #ifndef Py_GIL_DISABLED
+                 if (seq != NULL) {
+@@ -2627,6 +2627,7 @@ dummy_func(
+             _PyListIterObject *it = (_PyListIterObject *)iter;
+             assert(Py_TYPE(iter) == &PyListIter_Type);
+             PyListObject *seq = it->it_seq;
++            DEOPT_IF(seq == NULL);
+             DEOPT_IF((size_t)it->it_index >= (size_t)PyList_GET_SIZE(seq));
+         }
+ 
+diff --git a/Python/executor_cases.c.h b/Python/executor_cases.c.h
+index 11e2a1fe85..bb0033514e 100644
+--- a/Python/executor_cases.c.h
++++ b/Python/executor_cases.c.h
+@@ -2201,6 +2201,7 @@
+             _PyListIterObject *it = (_PyListIterObject *)iter;
+             assert(Py_TYPE(iter) == &PyListIter_Type);
+             PyListObject *seq = it->it_seq;
++            if (seq == NULL) goto deoptimize;
+             if ((size_t)it->it_index >= (size_t)PyList_GET_SIZE(seq)) goto deoptimize;
+             break;
+         }
+diff --git a/Python/generated_cases.c.h b/Python/generated_cases.c.h
+index 6c19adc60c..094fe0336d 100644
+--- a/Python/generated_cases.c.h
++++ b/Python/generated_cases.c.h
+@@ -2541,7 +2541,7 @@
+                 assert(Py_TYPE(iter) == &PyListIter_Type);
+                 STAT_INC(FOR_ITER, hit);
+                 PyListObject *seq = it->it_seq;
+-                if ((size_t)it->it_index >= (size_t)PyList_GET_SIZE(seq)) {
++                if (seq == NULL || (size_t)it->it_index >= (size_t)PyList_GET_SIZE(seq)) {
+                     it->it_index = -1;
+                     #ifndef Py_GIL_DISABLED
+                     if (seq != NULL) {
