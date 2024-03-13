@@ -17,7 +17,7 @@ URL: https://www.python.org/
 %global prerel a5
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: Python-2.0.1
 
 
@@ -1318,7 +1318,6 @@ CheckPython freethreading
 %dir %{pylibdir}/__pycache__/
 %{pylibdir}/__pycache__/*%{bytecode_suffixes}
 
-%{pylibdir}/__phello__/
 %{pylibdir}/asyncio/
 %{pylibdir}/collections/
 %{pylibdir}/concurrent/
@@ -1425,8 +1424,6 @@ CheckPython freethreading
 %{dynload_dir}/_statistics.%{1}.so\
 %{dynload_dir}/_struct.%{1}.so\
 %{dynload_dir}/_uuid.%{1}.so\
-%{dynload_dir}/_xxinterpqueues.%{1}.so\
-%{dynload_dir}/_xxsubinterpreters.%{1}.so\
 %{dynload_dir}/_zoneinfo.%{1}.so\
 %{dynload_dir}/array.%{1}.so\
 %{dynload_dir}/binascii.%{1}.so\
@@ -1442,9 +1439,6 @@ CheckPython freethreading
 %{dynload_dir}/syslog.%{1}.so\
 %{dynload_dir}/termios.%{1}.so\
 %{dynload_dir}/unicodedata.%{1}.so\
-%{dynload_dir}/xxlimited.%{1}.so\
-%{dynload_dir}/xxlimited_35.%{1}.so\
-%{dynload_dir}/xxsubtype.%{1}.so\
 %{dynload_dir}/zlib.%{1}.so
 
 %extension_modules %{SOABI_optimized}
@@ -1538,6 +1532,9 @@ CheckPython freethreading
 %files -n %{pkgname}-test
 %{pylibdir}/test/
 
+# Pure Python modules
+%{pylibdir}/__phello__/
+
 # Extension modules
 # This is macronized for reuse in the -debug package
 %define extension_modules_test() \
@@ -1553,7 +1550,12 @@ CheckPython freethreading
 %{dynload_dir}/_testmultiphase.%{1}.so\
 %{dynload_dir}/_testsinglephase.%{1}.so\
 %{dynload_dir}/_xxinterpchannels.%{1}.so\
-%{dynload_dir}/_xxtestfuzz.%{1}.so
+%{dynload_dir}/_xxinterpqueues.%{1}.so\
+%{dynload_dir}/_xxsubinterpreters.%{1}.so\
+%{dynload_dir}/_xxtestfuzz.%{1}.so\
+%{dynload_dir}/xxlimited.%{1}.so\
+%{dynload_dir}/xxlimited_35.%{1}.so\
+%{dynload_dir}/xxsubtype.%{1}.so
 
 %extension_modules_test %{SOABI_optimized}
 
@@ -1670,6 +1672,15 @@ CheckPython freethreading
 # ======================================================
 
 %changelog
+* Wed Mar 13 2024 Miro Hrončok <mhroncok@redhat.com> - 3.13.0~a5-2
+- Move all test modules to the python3.13-test package, namely:
+  - __phello__
+  - _xxinterpqueues
+  - _xxsubinterpreters
+  - xxlimited
+  - xxlimited_35
+  - xxsubtype
+
 * Wed Mar 13 2024 Miro Hrončok <mhroncok@redhat.com> - 3.13.0~a5-1
 - Update to Python 3.13.0a5
 
