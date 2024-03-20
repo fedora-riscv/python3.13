@@ -385,6 +385,14 @@ Patch251: 00251-change-user-install-location.patch
 # https://github.com/GrahamDumpleton/mod_wsgi/issues/730
 Patch371: 00371-revert-bpo-1596321-fix-threading-_shutdown-for-the-main-thread-gh-28549-gh-28589.patch
 
+# 00424 # 767f9ca0f729a52808648bca8786fe046c25a016
+# gh-116745: remove all internal usage of @LIBPYTHON@
+#
+# Follow on to https://github.com/python/cpython/pull/115780 .
+#
+# Without this change numpy's build is broken.
+Patch424: 00424-gh-116745-remove-all-internal-usage-of-libpython.patch
+
 # (New patches go here ^^^)
 #
 # When adding new patches to "python" and "python3" in Fedora, EL, etc.,
@@ -1672,7 +1680,7 @@ CheckPython freethreading
 # ======================================================
 
 %changelog
-* Wed Mar 13 2024 Miro Hrončok <mhroncok@redhat.com> - 3.13.0~a5-2
+* Wed Mar 13 2024 Python Maint <python-maint@redhat.com> - 3.13.0~a5-2
 - Move all test modules to the python3.13-test package, namely:
   - __phello__
   - _xxinterpqueues
@@ -1680,6 +1688,7 @@ CheckPython freethreading
   - xxlimited
   - xxlimited_35
   - xxsubtype
+- Remove internal usage of @LIBPYTHON@
 
 * Wed Mar 13 2024 Miro Hrončok <mhroncok@redhat.com> - 3.13.0~a5-1
 - Update to Python 3.13.0a5
