@@ -17,7 +17,7 @@ URL: https://www.python.org/
 %global prerel a5
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 2%{?dist}
+Release: 2.1%{?dist}
 License: Python-2.0.1
 
 
@@ -830,13 +830,13 @@ topdir=$(pwd)
 # Fedora packages utilizing %%py3_build will use them as well
 # https://fedoraproject.org/wiki/Changes/Python_Extension_Flags
 # https://fedoraproject.org/wiki/Changes/Python_Extension_Flags_Reduction
-export CFLAGS="%{extension_cflags}"
+export ALL_CFLAGS="%{extension_cflags}"
 export CFLAGS_NODIST="%{build_cflags} -D_GNU_SOURCE -fPIC -fwrapv"
 export CXXFLAGS="%{extension_cxxflags}"
 export CPPFLAGS="$(pkg-config --cflags-only-I libffi)"
 export OPT="%{extension_cflags}"
 export LINKCC="gcc"
-export CFLAGS="$CFLAGS $(pkg-config --cflags openssl)"
+export CFLAGS="$ALL_CFLAGS $(pkg-config --cflags openssl)"
 export LDFLAGS="%{extension_ldflags} $(pkg-config --libs-only-L openssl)"
 export LDFLAGS_NODIST="%{build_ldflags} -g $(pkg-config --libs-only-L openssl)"
 
@@ -884,7 +884,7 @@ BuildPython() {
   $ExtraConfigArgs \
   %{nil}
 
-%global flags_override EXTRA_CFLAGS="$MoreCFlags" CFLAGS_NODIST="$CFLAGS_NODIST $MoreCFlags"
+%global flags_override EXTRA_CFLAGS="$ALL_CFLAGS $MoreCFlags" CFLAGS_NODIST="$CFLAGS_NODIST $MoreCFlags"
 
 %if %{without bootstrap}
   # Regenerate generated files (needs python3)
