@@ -14,10 +14,10 @@ URL: https://www.python.org/
 #  WARNING  When rebasing to a new Python version,
 #           remember to update the python3-docs package as well
 %global general_version %{pybasever}.0
-%global prerel a5
+%global prerel a6
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 2%{?dist}
+Release: 1%{?dist}
 License: Python-2.0.1
 
 
@@ -75,7 +75,7 @@ License: Python-2.0.1
 #  $ tar -tf Python-%%{upstream_version}.tar.xz | grep whl
 %global pip_version 24.0
 %global setuptools_version 67.6.1
-%global wheel_version 0.40.0
+%global wheel_version 0.43.0
 # All of those also include a list of indirect bundled libs:
 # pip
 #  $ %%{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/ensurepip/_bundled/pip-*.whl pip/_vendor/vendor.txt)
@@ -126,7 +126,7 @@ Provides: bundled(python3dist(zipp)) = 3.7
 # wheel
 #  $ %%{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/test/wheeldata/wheel-*.whl wheel/vendored/vendor.txt)
 %global wheel_bundled_provides %{expand:
-Provides: bundled(python3dist(packaging)) = 23
+Provides: bundled(python3dist(packaging)) = 24
 }
 
 # Expensive optimizations (mainly, profile-guided optimizations)
@@ -142,7 +142,7 @@ Provides: bundled(python3dist(packaging)) = 23
 # Extra build without GIL, the freethreading PEP 703 provisional way
 # (the -freethreading subpackage)
 # support for s390x is pending investigation in
-# https://github.com/python/cpython/issues/114331
+# https://github.com/python/cpython/issues/117755
 %ifnarch s390x
 %bcond_without freethreading_build
 %else
@@ -374,24 +374,14 @@ Source11: idle3.appdata.xml
 # pypa/distutils integration: https://github.com/pypa/distutils/pull/70
 Patch251: 00251-change-user-install-location.patch
 
-# 00371 # 16d2d6be400cb52c0f50fa27c0e08ae63d1d3add
-# Revert "bpo-1596321: Fix threading._shutdown() for the main thread (GH-28549) (GH-28589)"
+# 00425 # a563ac3076a00f0f48b3f94ff63d91d37cb4f1e9
+# Only check for 'test/wheeldata' when it's actually used
 #
-# This reverts commit 38c67738c64304928c68d5c2bd78bbb01d979b94. It
-# introduced regression causing FreeIPA's tests to fail.
-#
-# For more info see:
-# https://bodhi.fedoraproject.org/updates/FEDORA-2021-e152ce5f31
-# https://github.com/GrahamDumpleton/mod_wsgi/issues/730
-Patch371: 00371-revert-bpo-1596321-fix-threading-_shutdown-for-the-main-thread-gh-28549-gh-28589.patch
-
-# 00424 # 767f9ca0f729a52808648bca8786fe046c25a016
-# gh-116745: remove all internal usage of @LIBPYTHON@
-#
-# Follow on to https://github.com/python/cpython/pull/115780 .
-#
-# Without this change numpy's build is broken.
-Patch424: 00424-gh-116745-remove-all-internal-usage-of-libpython.patch
+# We build Python in Fedora 39+ with option `--with-wheel-pkg-dir`
+# pointing to a custom wheel directory and delete the contents of
+# upstream's `test/wheeldata`. Don't include the directory in the test set
+# if the wheels are used from a different location.
+Patch425: 00425-only-check-for-test-wheeldata-when-it-s-actually-used.patch
 
 # (New patches go here ^^^)
 #
@@ -1680,6 +1670,9 @@ CheckPython freethreading
 # ======================================================
 
 %changelog
+* Wed Apr 10 2024 Karolina Surma <ksurma@redhat.com> - 3.13.0~a6-1
+- Update to Python 3.13.0a6
+
 * Wed Mar 13 2024 Python Maint <python-maint@redhat.com> - 3.13.0~a5-2
 - Move all test modules to the python3.13-test package, namely:
   - __phello__
