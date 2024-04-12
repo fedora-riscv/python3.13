@@ -503,15 +503,17 @@ This package contains /usr/bin/python - the "python" command that runs Python 3.
 %package -n %{pkgname}-libs
 Summary:        Python runtime libraries
 
+# Bundled libb2 is CC0, covered by grandfathering exception
+# Bundled mimalloc is MIT
+%global libs_license Python-2.0.1 AND CC0-1.0 AND MIT
 %if %{with rpmwheels}
 Requires: %{python_wheel_pkg_prefix}-pip-wheel >= 23.1.2
-# Bundled libb2 is CC0, covered by grandfathering exception
-License: Python-2.0.1 AND CC0-1.0
+License: %{libs_license}
 %else
 Provides: bundled(python3dist(pip)) = %{pip_version}
 %pip_bundled_provides
-# License manually combined form Python + pip
-License: Python-2.0.1 AND CC0-1.0 AND MIT AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND ISC AND LGPL-2.1-only AND MPL-2.0 AND (Apache-2.0 OR BSD-2-Clause)
+# License combined from Python libs + pip
+License: %{libs_license} AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND ISC AND LGPL-2.1-only AND MPL-2.0 AND (Apache-2.0 OR BSD-2-Clause)
 %endif
 
 %unversioned_obsoletes_of_python3_X_if_main libs
@@ -519,6 +521,11 @@ License: Python-2.0.1 AND CC0-1.0 AND MIT AND Apache-2.0 AND BSD-2-Clause AND BS
 # Bundled internal headers are used even when building with system libb2
 # last updated by https://github.com/python/cpython/pull/6286
 Provides: bundled(libb2) = 0.98.1
+
+# Bundled mimalloc version in Include/internal/mimalloc/mimalloc.h
+# Python's version is modified, differences are listed in:
+# https://github.com/python/cpython/issues/113141
+Provides: bundled(mimalloc) = 2.12
 
 # There are files in the standard library that have python shebang.
 # We've filtered the automatic requirement out so libs are installable without
@@ -543,6 +550,8 @@ This package contains runtime libraries for use by Python:
 
 %package -n %{pkgname}-devel
 Summary: Libraries and header files needed for Python development
+# Bundled mimalloc header files are MIT
+License: Python-2.0.1 AND MIT
 Requires: %{pkgname} = %{version}-%{release}
 Requires: %{pkgname}-libs%{?_isa} = %{version}-%{release}
 # The RPM related dependencies bring nothing to a non-RPM Python developer
@@ -651,6 +660,7 @@ you should use the unittest module from %{pkgname}-libs, or a library such as
 %if %{with debug_build}
 %package -n %{pkgname}-debug
 Summary: Debug version of the Python runtime
+License: %{libs_license}
 
 # The debug build is an all-in-one package version of the regular build, and
 # shares the same .py/.pyc files and directories as the regular build. Hence
@@ -688,6 +698,7 @@ The debug runtime additionally supports debug builds of C-API extensions
 # At least until the PEP 703 build remains provisional.
 %package -n python%{pybasever}-freethreading
 Summary: Free Threading (PEP 703) version of the Python runtime
+License: %{libs_license}
 
 # The freethreading build is an all-in-one package version of the regular build, and
 # shares the same .py/.pyc files and directories as the regular build. Hence
@@ -715,6 +726,7 @@ and with the necessary changes needed to make the interpreter thread-safe.
 %if %{with freethreading_build} && %{with debug_build}
 %package -n python%{pybasever}-freethreading-debug
 Summary: Free Threading (PEP 703) version of the Python runtime (debug build)
+License: %{libs_license}
 
 # The debug build is an all-in-one package version of the regular build, and
 # shares the same .py/.pyc files and directories as the regular build. Hence
