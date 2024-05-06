@@ -34,9 +34,18 @@
     - debugtest:
         dir: python/selftest
         run: "VERSION={{ pybasever }} PYTHON=python{{ pybasever }}d X='-i test_check_probes' ./parallel.sh"
+    - optimizedflags:
+        dir: python/flags
+        run: "python{{ pybasever }} ./assertflags.py -O3"
     - debugflags:
         dir: python/flags
         run: "python{{ pybasever }}d ./assertflags.py -O0"
+    - freethreadingflags:
+        dir: python/flags
+        run: "python{{ pybasever }}t ./assertflags.py -O3"
+    - freethreadingdebugflags:
+        dir: python/flags
+        run: "python{{ pybasever }}td ./assertflags.py -O0"
     - marshalparser:
         dir: python/marshalparser
         run: "VERSION={{ pybasever }} SAMPLE=10 test_marshalparser_compatibility.sh"
@@ -49,6 +58,8 @@
     - "python{{ pybasever }}-devel"  # for extension building in venv and selftest
     - "python{{ pybasever }}-tkinter"  # for selftest
     - "python{{ pybasever }}-test"  # for selftest
+    - "python{{ pybasever }}-freethreading"  # for -O... flag test
+    - "python{{ pybasever }}-freethreading-debug"  # for -O... flag test
     - tox  # for venv tests
     - virtualenv  # for virtualenv tests
     - glibc-all-langpacks # for locale tests

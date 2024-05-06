@@ -17,7 +17,7 @@ URL: https://www.python.org/
 %global prerel a6
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: Python-2.0.1
 
 
@@ -225,6 +225,15 @@ Provides: bundled(python3dist(packaging)) = 24
 %global py_INSTSONAME_debug               libpython%{LDVERSION_debug}.so.%{py_SOVERSION}
 %global py_INSTSONAME_freethreading       libpython%{LDVERSION_freethreading}.so.%{py_SOVERSION}
 %global py_INSTSONAME_freethreading_debug libpython%{LDVERSION_freethreading_debug}.so.%{py_SOVERSION}
+
+# The -O flag for the compiler, optimized builds
+# https://fedoraproject.org/wiki/Changes/Python_built_with_gcc_O3
+%global optflags_optimized -O3
+# The -O flag for the compiler, debug builds
+# -Wno-cpp avoids some warnings with -O0
+%global optflags_debug -O0 -Wno-cpp
+# Remove the default -O2 flag, our flags are applied in %%build/%%install
+%global __global_compiler_flags %(echo '%{__global_compiler_flags}' | sed 's/-O[[:digit:]]//')
 
 # Disable automatic bytecompilation. The python3 binary is not yet be
 # available in /usr/bin when Python is built. Also, the bytecompilation fails
@@ -918,23 +927,23 @@ BuildPython() {
 # See also: https://bugzilla.redhat.com/show_bug.cgi?id=1818857
 BuildPython debug \
   "--without-ensurepip --with-pydebug" \
-  "-O0 -Wno-cpp"
+  "%{optflags_debug}"
 %endif # with debug_build
 
 BuildPython optimized \
   "--without-ensurepip %{optimizations_flag}" \
-  ""
+  "%{optflags_optimized}"
 
 %if %{with freethreading_build} && %{with debug_build}
 BuildPython freethreading-debug \
   "--without-ensurepip --with-pydebug --disable-gil" \
-  "-O0 -Wno-cpp"
+  "%{optflags_debug}"
 %endif # with freethreading_build && debug_build
 
 %if %{with freethreading_build}
 BuildPython freethreading \
   "--without-ensurepip %{optimizations_flag} --disable-gil" \
-  ""
+  "%{optflags_optimized}"
 %endif # with freethreading_build
 
 # ======================================================
@@ -1041,14 +1050,14 @@ EOF
 # Now the freethreading debug build:
 InstallPython freethreading-debug \
   %{py_INSTSONAME_freethreading_debug} \
-  "" \
+  "%{optflags_debug}" \
   %{LDVERSION_freethreading_debug}
 %endif # with freethreading_build && debug_build
 
 %if %{with debug_build}
 InstallPython debug \
   %{py_INSTSONAME_debug} \
-  -O0 \
+  "%{optflags_debug}" \
   %{LDVERSION_debug}
 %endif # with debug_build
 
@@ -1056,14 +1065,14 @@ InstallPython debug \
 # Now the freethreading optimized build:
 InstallPython freethreading \
   %{py_INSTSONAME_freethreading} \
-  "" \
+  "%{optflags_optimized}" \
   %{LDVERSION_freethreading}
 %endif # with freethreading_build
 
 # Now the optimized build:
 InstallPython optimized \
   %{py_INSTSONAME_optimized} \
-  "" \
+  "%{optflags_optimized}" \
   %{LDVERSION_optimized}
 
 # Install directories for additional packages
@@ -1691,6 +1700,10 @@ CheckPython freethreading
 # ======================================================
 
 %changelog
+* Mon May 06 2024 Miro Hrončok <mhroncok@redhat.com> - 3.13.0~a6-3
+- Build Python with -O3
+- https://fedoraproject.org/wiki/Changes/Python_built_with_gcc_O3
+
 * Wed Apr 17 2024 Miro Hrončok <mhroncok@redhat.com> - 3.13.0~a6-2
 - Require expat >= 2.6 to prevent errors when creating venvs with older expat
 
