@@ -30,10 +30,10 @@ Co-authored-by: Lumír Balhar <frenzy.madness@gmail.com>
  3 files changed, 72 insertions(+), 4 deletions(-)
 
 diff --git a/Lib/site.py b/Lib/site.py
-index 162bbec4f8..40c5981e03 100644
+index b63447d667..2476b1a484 100644
 --- a/Lib/site.py
 +++ b/Lib/site.py
-@@ -395,8 +395,15 @@ def getsitepackages(prefixes=None):
+@@ -404,8 +404,15 @@ def getsitepackages(prefixes=None):
      return sitepackages
  
  def addsitepackages(known_paths, prefixes=None):
@@ -51,7 +51,7 @@ index 162bbec4f8..40c5981e03 100644
          if os.path.isdir(sitedir):
              addsitedir(sitedir, known_paths)
 diff --git a/Lib/sysconfig/__init__.py b/Lib/sysconfig/__init__.py
-index 70bdecf213..5cd75a3b96 100644
+index 98a14e5d3a..8369073fee 100644
 --- a/Lib/sysconfig/__init__.py
 +++ b/Lib/sysconfig/__init__.py
 @@ -106,6 +106,12 @@
@@ -130,7 +130,7 @@ index 70bdecf213..5cd75a3b96 100644
          # On Windows we want to substitute 'lib' for schemes rather
          # than the native value (without modifying vars, in case it
 diff --git a/Lib/test/test_sysconfig.py b/Lib/test/test_sysconfig.py
-index 61c6a5a425..fd5fbe17ad 100644
+index 9233304c6a..4acaad5ed6 100644
 --- a/Lib/test/test_sysconfig.py
 +++ b/Lib/test/test_sysconfig.py
 @@ -121,8 +121,19 @@ def test_get_path(self):
@@ -154,7 +154,7 @@ index 61c6a5a425..fd5fbe17ad 100644
                      os.path.normpath(expected),
                  )
  
-@@ -357,7 +368,7 @@ def test_get_config_h_filename(self):
+@@ -377,7 +388,7 @@ def test_get_config_h_filename(self):
          self.assertTrue(os.path.isfile(config_h), config_h)
  
      def test_get_scheme_names(self):
@@ -163,7 +163,7 @@ index 61c6a5a425..fd5fbe17ad 100644
          if HAS_USER_BASE:
              wanted.extend(['nt_user', 'osx_framework_user', 'posix_user'])
          self.assertEqual(get_scheme_names(), tuple(sorted(wanted)))
-@@ -369,6 +380,8 @@ def test_symlink(self): # Issue 7880
+@@ -389,6 +400,8 @@ def test_symlink(self): # Issue 7880
              cmd = "-c", "import sysconfig; print(sysconfig.get_platform())"
              self.assertEqual(py.call_real(*cmd), py.call_link(*cmd))
  

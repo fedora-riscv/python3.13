@@ -1,0 +1,58 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sam Gross <colesbury@gmail.com>
+Date: Thu, 9 May 2024 16:06:20 -0400
+Subject: [PATCH] 00428: gh-118846: Fix PGO tests in free-threaded build
+
+Avoid immortalizing objects in tests that verify garbage collection of
+classes or modules.
+
+This fixes test_ordered_dict and test_struct.
+
+(cherry picked from commit 1b1db2fd9a531e26b79b34667bccfb938c4d184d)
+---
+ Lib/test/test_ordered_dict.py | 3 ++-
+ Lib/test/test_struct.py       | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/Lib/test/test_ordered_dict.py b/Lib/test/test_ordered_dict.py
+index 4571b23dfe..06a0e81227 100644
+--- a/Lib/test/test_ordered_dict.py
++++ b/Lib/test/test_ordered_dict.py
+@@ -10,7 +10,7 @@
+ import weakref
+ from collections.abc import MutableMapping
+ from test import mapping_tests, support
+-from test.support import import_helper
++from test.support import import_helper, suppress_immortalization
+ 
+ 
+ py_coll = import_helper.import_fresh_module('collections',
+@@ -667,6 +667,7 @@ def test_dict_update(self):
+         dict.update(od, [('spam', 1)])
+         self.assertNotIn('NULL', repr(od))
+ 
++    @suppress_immortalization()
+     def test_reference_loop(self):
+         # Issue 25935
+         OrderedDict = self.OrderedDict
+diff --git a/Lib/test/test_struct.py b/Lib/test/test_struct.py
+index 15f6ee06ff..5508cc3eec 100644
+--- a/Lib/test/test_struct.py
++++ b/Lib/test/test_struct.py
+@@ -9,7 +9,7 @@
+ import weakref
+ 
+ from test import support
+-from test.support import import_helper
++from test.support import import_helper, suppress_immortalization
+ from test.support.script_helper import assert_python_ok
+ 
+ ISBIGENDIAN = sys.byteorder == "big"
+@@ -674,6 +674,7 @@ def __del__(self):
+         self.assertIn(b"Exception ignored in:", stderr)
+         self.assertIn(b"C.__del__", stderr)
+ 
++    @suppress_immortalization()
+     def test__struct_reference_cycle_cleaned_up(self):
+         # Regression test for python/cpython#94207.
+ 

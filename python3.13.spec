@@ -14,10 +14,10 @@ URL: https://www.python.org/
 #  WARNING  When rebasing to a new Python version,
 #           remember to update the python3-docs package as well
 %global general_version %{pybasever}.0
-%global prerel a6
+%global prerel b1
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 3%{?dist}
+Release: 1%{?dist}
 License: Python-2.0.1
 
 
@@ -141,13 +141,7 @@ Provides: bundled(python3dist(packaging)) = 24
 
 # Extra build without GIL, the freethreading PEP 703 provisional way
 # (the -freethreading subpackage)
-# support for s390x is pending investigation in
-# https://github.com/python/cpython/issues/117755
-%ifnarch s390x
 %bcond_without freethreading_build
-%else
-%bcond_with freethreading_build
-%endif
 
 # Support for the GDB debugger
 %bcond_without gdb_hooks
@@ -384,14 +378,14 @@ Source11: idle3.appdata.xml
 # pypa/distutils integration: https://github.com/pypa/distutils/pull/70
 Patch251: 00251-change-user-install-location.patch
 
-# 00425 # a563ac3076a00f0f48b3f94ff63d91d37cb4f1e9
-# Only check for 'test/wheeldata' when it's actually used
+# 00428 # 8c674ea0d9368e1b239bc9c7ee6044d925e252a4
+# gh-118846: Fix PGO tests in free-threaded build
 #
-# We build Python in Fedora 39+ with option `--with-wheel-pkg-dir`
-# pointing to a custom wheel directory and delete the contents of
-# upstream's `test/wheeldata`. Don't include the directory in the test set
-# if the wheels are used from a different location.
-Patch425: 00425-only-check-for-test-wheeldata-when-it-s-actually-used.patch
+# Avoid immortalizing objects in tests that verify garbage collection of
+# classes or modules.
+#
+# This fixes test_ordered_dict and test_struct.
+Patch428: 00428-gh-118846-fix-pgo-tests-in-free-threaded-build.patch
 
 # (New patches go here ^^^)
 #
@@ -1346,6 +1340,7 @@ CheckPython freethreading
 %dir %{pylibdir}/__pycache__/
 %{pylibdir}/__pycache__/*%{bytecode_suffixes}
 
+%{pylibdir}/_pyrepl/
 %{pylibdir}/asyncio/
 %{pylibdir}/collections/
 %{pylibdir}/concurrent/
@@ -1431,6 +1426,9 @@ CheckPython freethreading
 %{dynload_dir}/_elementtree.%{1}.so\
 %{dynload_dir}/_hashlib.%{1}.so\
 %{dynload_dir}/_heapq.%{1}.so\
+%{dynload_dir}/_interpchannels.%{1}.so\
+%{dynload_dir}/_interpqueues.%{1}.so\
+%{dynload_dir}/_interpreters.%{1}.so\
 %{dynload_dir}/_json.%{1}.so\
 %{dynload_dir}/_lsprof.%{1}.so\
 %{dynload_dir}/_lzma.%{1}.so\
@@ -1577,9 +1575,6 @@ CheckPython freethreading
 %{dynload_dir}/_testlimitedcapi.%{1}.so\
 %{dynload_dir}/_testmultiphase.%{1}.so\
 %{dynload_dir}/_testsinglephase.%{1}.so\
-%{dynload_dir}/_xxinterpchannels.%{1}.so\
-%{dynload_dir}/_xxinterpqueues.%{1}.so\
-%{dynload_dir}/_xxsubinterpreters.%{1}.so\
 %{dynload_dir}/_xxtestfuzz.%{1}.so\
 %{dynload_dir}/xxlimited.%{1}.so\
 %{dynload_dir}/xxlimited_35.%{1}.so\
@@ -1700,6 +1695,9 @@ CheckPython freethreading
 # ======================================================
 
 %changelog
+* Thu May 09 2024 Karolina Surma <ksurma@redhat.com> - 3.13.0~b1-1
+- Update to Python 3.13.0b1
+
 * Mon May 06 2024 Miro Hrončok <mhroncok@redhat.com> - 3.13.0~a6-3
 - Build Python with -O3
 - https://fedoraproject.org/wiki/Changes/Python_built_with_gcc_O3
