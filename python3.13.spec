@@ -17,7 +17,7 @@ URL: https://www.python.org/
 %global prerel b1
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: Python-2.0.1
 
 
@@ -142,6 +142,22 @@ Provides: bundled(python3dist(packaging)) = 24
 # Extra build without GIL, the freethreading PEP 703 provisional way
 # (the -freethreading subpackage)
 %bcond_without freethreading_build
+
+# PEP 744: JIT Compilation
+# Whether to build with the experimental JIT compiler
+# We can only have this on Fedora 40+, where clang 18+ is available
+# And only on certain architectures: https://peps.python.org/pep-0744/#support
+# The freethreading build (when enabled) does not support JIT yet
+%bcond_with jit
+%ifarch x86_64 aarch64
+%if 0%{?fedora} >= 40 || 0%{?rhel} >= 10
+%bcond_without jit
+%endif
+%endif
+%if %{with jit}
+# When built with JIT, it still needs to be enabled on runtime via PYTHON_JIT=1
+%global jit_flag --enable-experimental-jit=yes-off
+%endif
 
 # Support for the GDB debugger
 %bcond_without gdb_hooks
@@ -303,6 +319,11 @@ BuildRequires: tar
 BuildRequires: tcl-devel
 BuildRequires: tk-devel
 BuildRequires: tzdata
+
+%if %{with jit}
+BuildRequires: clang >= 18
+BuildRequires: llvm >= 18
+%endif
 
 %if %{with valgrind}
 BuildRequires: valgrind-devel
@@ -920,12 +941,12 @@ BuildPython() {
 # option produces too many warnings when compiling at the O0 optimization level.
 # See also: https://bugzilla.redhat.com/show_bug.cgi?id=1818857
 BuildPython debug \
-  "--without-ensurepip --with-pydebug" \
+  "--without-ensurepip --with-pydebug %{?jit_flag}" \
   "%{optflags_debug}"
 %endif # with debug_build
 
 BuildPython optimized \
-  "--without-ensurepip %{optimizations_flag}" \
+  "--without-ensurepip %{?jit_flag} %{optimizations_flag}" \
   "%{optflags_optimized}"
 
 %if %{with freethreading_build} && %{with debug_build}
@@ -1695,6 +1716,11 @@ CheckPython freethreading
 # ======================================================
 
 %changelog
+* Sun May 12 2024 Miro Hrončok <mhroncok@redhat.com> - 3.13.0~b1-2
+- On Fedora 40+ x86_64 and aarch64, build Python with the experimental JIT compiler
+- To enable it on runtime, set the PYTHON_JIT environment variable to 1
+- https://peps.python.org/pep-0744/
+
 * Thu May 09 2024 Karolina Surma <ksurma@redhat.com> - 3.13.0~b1-1
 - Update to Python 3.13.0b1
 
