@@ -321,8 +321,8 @@ BuildRequires: tk-devel
 BuildRequires: tzdata
 
 %if %{with jit}
-BuildRequires: clang >= 18
-BuildRequires: llvm >= 18
+BuildRequires: clang(major) = 18
+BuildRequires: llvm(major) = 18
 %endif
 
 %if %{with valgrind}
