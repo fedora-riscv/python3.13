@@ -17,7 +17,7 @@ URL: https://www.python.org/
 %global prerel b1
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 1%{?dist}
+Release: 1.0.riscv64%{?dist}
 License: Python-2.0.1
 
 
@@ -1278,7 +1278,7 @@ CheckPython() {
   # https://github.com/python/cpython/issues/110932
   unset SOURCE_DATE_EPOCH
   LD_LIBRARY_PATH=$ConfDir $ConfDir/python -m test.regrtest \
-    -wW --slowest %{_smp_mflags} --timeout=2700 \
+    -wW --slowest %{_smp_mflags} --timeout=27000 \
     -i test_freeze_simple_script \
     -i test_check_probes \
     %ifarch %{mips64}
@@ -1695,6 +1695,9 @@ CheckPython freethreading
 # ======================================================
 
 %changelog
+* Wed May 15 2024 David Abdurachmanov <davidlt@rivosinc.com> - 3.13.0~b1-1.0.riscv64
+- Increase tests timeout by 10x
+
 * Thu May 09 2024 Karolina Surma <ksurma@redhat.com> - 3.13.0~b1-1
 - Update to Python 3.13.0b1
 
