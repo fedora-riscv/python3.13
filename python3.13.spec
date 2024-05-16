@@ -17,7 +17,7 @@ URL: https://www.python.org/
 %global prerel b1
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 1.0.riscv64%{?dist}
+Release: 1.1.riscv64%{?dist}
 License: Python-2.0.1
 
 
@@ -1695,6 +1695,9 @@ CheckPython freethreading
 # ======================================================
 
 %changelog
+* Thu May 16 2024 David Abdurachmanov <davidlt@rivosinc.com> - 3.13.0~b1-1.1.riscv64
+- Bump
+
 * Wed May 15 2024 David Abdurachmanov <davidlt@rivosinc.com> - 3.13.0~b1-1.0.riscv64
 - Increase tests timeout by 10x
 
